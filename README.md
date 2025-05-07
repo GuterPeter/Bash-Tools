@@ -44,6 +44,9 @@ For example, to use my docker-shutdown tool (which lists and shuts down all or s
 
 ❓ Need Help?
 
+Maybe you are using windows and still want to use my tools, for this case i strongly advice you to use WSL to do so, yes in theory you could get it working using something like git-bash.
+But that comes with a LOT of overhead and complications so save urself the hassle and just install WSL ;)
+
 If something's not working or you're confused, don’t worry—ChatGPT will probably be more than happy to help you debug things. 😉
 
 Have fun, and maybe—just maybe—these tools will come in handy.
