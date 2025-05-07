@@ -1,0 +1,79 @@
+docker-startup() {
+  echo ""
+  echo "Fetching stopped containers..."
+  echo ""
+
+   mapfile -t container_list < <(sudo docker ps -a --filter "status=exited" --format '{{.ID}} {{.Names}} {{.Image}}')
+
+  if [ ${#container_list[@]} -eq 0 ]; then
+    echo "No stopped containers to start ;)"
+    echo ""
+    return
+  fi
+
+  echo "Stopped Containers:"
+  echo ""
+
+  declare -a container_ids
+
+  for i in "${!container_list[@]}"; do
+    container="${container_list[$i]}"
+    id=$(echo "$container" | awk '{print $1}')
+    name=$(echo "$container" | awk '{print $2}')
+    image=$(echo "$container" | awk '{print $3}')
+    index=$((i + 1))
+    echo "[$index] $name ($image) - $id"
+    container_ids+=("$id")
+  done
+
+  while true; do
+    echo ""
+    echo "Enter the number(s) of container(s) to start (e.g. 1 2 5), or 'all' to start everything:"
+    read -rp "> " input
+    echo ""
+
+    selected_ids=()
+
+    if [[ "$input" == "all" ]]; then
+      selected_ids=("${container_ids[@]}")
+      break
+    else
+      valid=true
+      for num in $input; do
+        if [[ "$num" =~ ^[0-9]+$ ]] && (( num >= 1 && num <= ${#container_ids[@]} )); then
+          index=$((num - 1))
+          selected_ids+=("${container_ids[$index]}")
+        else
+          echo "Invalid selection: '$num'"
+          valid=false
+          break
+        fi
+      done
+
+      if [ "$valid" = true ]; then
+        break
+      fi
+    fi
+  done
+
+  echo "Starting selected container(s)..."
+  sudo docker start "${selected_ids[@]}"
+
+  echo ""
+  echo "Startup complete!"
+  echo ""
+  echo "Finishing up, please wait a moment..."
+  echo ""
+
+  bar_length=20
+  for ((i=1; i<=bar_length; i++)); do
+    echo -n "*"
+    sleep 0.1
+  done
+
+  echo ""
+  sleep 1
+  echo "Finished! Containers are running. Have fun!"
+  echo ""
+}
+
