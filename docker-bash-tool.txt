@@ -1,0 +1,77 @@
+docker-shutdown() 
+{ 
+    echo "";
+    echo "Fetching running containers...";
+    echo " ";
+    bar_length=20;
+    for ((i=1; i<=bar_length; i++))
+    do
+        echo -n "*";
+        sleep 0.1;
+    done;
+    mapfile -t container_list < <(sudo docker ps --format '{{.ID}} {{.Names}} {{.Image}}');
+    if [ ${#container_list[@]} -eq 0 ]; then
+        sleep 1;
+        echo " ";
+        echo " ";
+        echo "No running containers. Nothing to do ;)";
+        echo "";
+        return;
+    fi;
+    echo "";
+    echo "";
+    echo "Running Containers:";
+    echo "";
+    declare -a container_ids;
+    for i in "${!container_list[@]}";
+    do
+        container="${container_list[$i]}";
+        id=$(echo "$container" | awk '{print $1}');
+        name=$(echo "$container" | awk '{print $2}');
+        image=$(echo "$container" | awk '{print $3}');
+        index=$((i + 1));
+        echo "[$index] $name ($image) - $id";
+        container_ids+=("$id");
+    done;
+    echo "";
+    echo "Enter the number(s) of container(s) to stop (e.g. 1 3 4), or 'all' to stop everything:";
+    read -rp "> " input;
+    echo "";
+    selected_ids=();
+    if [[ "$input" == "all" ]]; then
+        selected_ids=("${container_ids[@]}");
+    else
+        for num in $input;
+        do
+            if [[ "$num" =~ ^[0-9]+$ ]] && (( num >= 1 && num <= ${#container_ids[@]} )); then
+                index=$((num - 1));
+                selected_ids+=("${container_ids[$index]}");
+            else
+                echo "Invalid selection: '$num'";
+            fi;
+        done;
+    fi;
+    if [ ${#selected_ids[@]} -eq 0 ]; then
+        echo "No valid containers selected. Aborting.";
+        restart;
+    fi;
+    echo "Stopping selected container(s)...";
+    sudo docker stop "${selected_ids[@]}";
+    echo "";
+    echo "Shutdown complete!";
+    echo "";
+    echo "Finishing up, please wait a moment...";
+    echo "";
+    bar_length=20;
+    for ((i=1; i<=bar_length; i++))
+    do
+        echo -n "*";
+        sleep 0.1;
+    done;
+    echo "";
+    sleep 1;
+    echo "";
+    echo "Finished! Thanks for using my tool! Goodbye!";
+    echo ""
+}
+
